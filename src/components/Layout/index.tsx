@@ -1,12 +1,19 @@
-import React from 'react';
-import {SafeAreaView, StatusBar, useColorScheme} from 'react-native';
+import React, {useState} from 'react';
+import {
+  SafeAreaView,
+  StatusBar,
+  useColorScheme,
+  RefreshControl,
+} from 'react-native';
 import {ScrollView} from 'native-base';
 
 type Props = {
   children?: React.ReactNode;
+  onRefresh?: () => void;
+  refreshing?: boolean;
 };
 
-const Layout: React.FC<Props> = ({children}) => {
+const Layout: React.FC<Props> = ({children, onRefresh, refreshing}) => {
   const isDarkMode = useColorScheme() === 'dark';
   return (
     <SafeAreaView>
@@ -14,7 +21,14 @@ const Layout: React.FC<Props> = ({children}) => {
         barStyle={isDarkMode ? 'light-content' : 'dark-content'}
         backgroundColor={isDarkMode ? 'black' : 'white'}
       />
-      <ScrollView>{children}</ScrollView>
+      <ScrollView
+        refreshControl={
+          onRefresh && refreshing !== undefined ? (
+            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+          ) : undefined
+        }>
+        {children}
+      </ScrollView>
     </SafeAreaView>
   );
 };
