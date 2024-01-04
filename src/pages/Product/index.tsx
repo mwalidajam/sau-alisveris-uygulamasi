@@ -7,10 +7,12 @@ import Layout from '../../components/Layout';
 import {ProductProps} from '../../types';
 import axios from 'axios';
 import {api_url} from '../../data/url';
+import {useAppDispatch, useAppSelector} from '../../redux/hooks';
 
 type Props = BottomTabScreenProps<RootTabParamList, 'Product'>;
 
 const Product: React.FC<Props> = ({navigation, route: {params}}) => {
+  const userData = useAppSelector(state => state.user);
   const [isFavorite, setIsFavorite] = useState<boolean>(false);
   const [loading, setLoading] = useState<boolean>(false);
   const [product, setProduct] = useState<ProductProps>();
@@ -18,7 +20,44 @@ const Product: React.FC<Props> = ({navigation, route: {params}}) => {
     setLoading(true);
     const response = await axios.get(`${api_url}/api/products/${params.id}`);
     setProduct(response.data?.product);
+    if (response.data?.product?.is_favorite) {
+      setIsFavorite(response.data.product.is_favorite);
+    }
     setLoading(false);
+  };
+  const addToFavorite = async () => {
+    const token = userData.token;
+    const {data} = await axios.post(
+      `${api_url}/api/customers/favorite-products/add`,
+      {
+        product_id: params.id,
+      },
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      },
+    );
+    if (data.status === 'success') {
+      setIsFavorite(true);
+    }
+  };
+  const removeFromFavorite = async () => {
+    const token = userData.token;
+    const {data} = await axios.post(
+      `${api_url}/api/customers/favorite-products/remove`,
+      {
+        product_id: params.id,
+      },
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      },
+    );
+    if (data.status === 'success') {
+      setIsFavorite(false);
+    }
   };
   useEffect(() => {
     LoadProduct();
@@ -48,7 +87,17 @@ const Product: React.FC<Props> = ({navigation, route: {params}}) => {
                   name={isFavorite ? 'heart' : 'heart-o'}
                   size={30}
                   color={isFavorite ? 'red' : 'gray'}
-                  onPress={() => setIsFavorite(!isFavorite)}
+                  onPress={() => {
+                    if (userData.token) {
+                      if (isFavorite) {
+                        removeFromFavorite();
+                      } else {
+                        addToFavorite();
+                      }
+                    } else {
+                      navigation.navigate('Profile');
+                    }
+                  }}
                 />
               }
             </Box>

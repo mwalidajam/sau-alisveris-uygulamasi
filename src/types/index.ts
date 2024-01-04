@@ -3,6 +3,7 @@ export type ProductProps = {
   name: string;
   price: number;
   details?: string;
+  is_favorite?: boolean;
   image?: {
     path?: string;
   };
