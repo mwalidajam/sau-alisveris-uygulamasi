@@ -44,6 +44,9 @@ const Profile: React.FC<Props> = ({navigation}) => {
           </>
         ) : (
           <>
+            {
+              // @ts-ignore
+            }
             <TextField
               placeholder="E-posta"
               onChangeText={value => setEmail(value)}

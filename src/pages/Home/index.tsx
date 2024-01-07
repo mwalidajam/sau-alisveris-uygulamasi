@@ -16,7 +16,7 @@ const Home: React.FC<Props> = ({navigation}) => {
   const [loading, setLoading] = useState<boolean>(false);
   const LoadProducts = async () => {
     setLoading(true);
-    const response = await axios.get(`${api_url}/api/products`);
+    const response = await axios.get(`${api_url}/api/app-products`);
     setProducts(response.data?.products);
     setLoading(false);
   };

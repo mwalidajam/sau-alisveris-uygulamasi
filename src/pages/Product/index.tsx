@@ -8,6 +8,8 @@ import {ProductProps} from '../../types';
 import axios from 'axios';
 import {api_url} from '../../data/url';
 import {useAppDispatch, useAppSelector} from '../../redux/hooks';
+// import activityIndicator from '../../components/ActivityIndicator';
+import {ActivityIndicator} from 'react-native';
 
 type Props = BottomTabScreenProps<RootTabParamList, 'Product'>;
 
@@ -15,17 +17,27 @@ const Product: React.FC<Props> = ({navigation, route: {params}}) => {
   const userData = useAppSelector(state => state.user);
   const [isFavorite, setIsFavorite] = useState<boolean>(false);
   const [loading, setLoading] = useState<boolean>(false);
+  const [isLoadingFavorite, setIsLoadingFavorite] = useState<boolean>(false);
   const [product, setProduct] = useState<ProductProps>();
   const LoadProduct = async () => {
     setLoading(true);
-    const response = await axios.get(`${api_url}/api/products/${params.id}`);
+    const response = await axios.get(
+      `${api_url}/api/app-products/${params.id}`,
+      {
+        headers: {
+          Authorization: `Bearer ${userData.token}`,
+        },
+      },
+    );
     setProduct(response.data?.product);
-    if (response.data?.product?.is_favorite) {
+    if (response.data.product?.is_favorite) {
       setIsFavorite(response.data.product.is_favorite);
     }
+    console.log(response.data);
     setLoading(false);
   };
   const addToFavorite = async () => {
+    setIsLoadingFavorite(true);
     const token = userData.token;
     const {data} = await axios.post(
       `${api_url}/api/customers/favorite-products/add`,
@@ -41,8 +53,10 @@ const Product: React.FC<Props> = ({navigation, route: {params}}) => {
     if (data.status === 'success') {
       setIsFavorite(true);
     }
+    setIsLoadingFavorite(false);
   };
   const removeFromFavorite = async () => {
+    setIsLoadingFavorite(true);
     const token = userData.token;
     const {data} = await axios.post(
       `${api_url}/api/customers/favorite-products/remove`,
@@ -58,10 +72,11 @@ const Product: React.FC<Props> = ({navigation, route: {params}}) => {
     if (data.status === 'success') {
       setIsFavorite(false);
     }
+    setIsLoadingFavorite(false);
   };
   useEffect(() => {
     LoadProduct();
-  }, []);
+  }, [params.id]);
   return (
     <Layout onRefresh={LoadProduct} refreshing={loading}>
       {product && (
@@ -82,7 +97,9 @@ const Product: React.FC<Props> = ({navigation, route: {params}}) => {
               <Text fontSize="xl" fontWeight="bold">
                 {product?.name}
               </Text>
-              {
+              {isLoadingFavorite ? (
+                <ActivityIndicator />
+              ) : (
                 <Icon
                   name={isFavorite ? 'heart' : 'heart-o'}
                   size={30}
@@ -99,7 +116,7 @@ const Product: React.FC<Props> = ({navigation, route: {params}}) => {
                     }
                   }}
                 />
-              }
+              )}
             </Box>
             <Text fontSize="md" fontWeight={'bold'} color="green.800">
               {product?.price} TL
